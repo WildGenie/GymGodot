@@ -30,7 +30,7 @@ low = -high
 observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
 # Create folder to store renders
-renderPath = os.getcwd() + '/render_frames/'
+renderPath = f'{os.getcwd()}/render_frames/'
 if not os.path.exists(renderPath):
     os.makedirs(renderPath)
 else:
@@ -77,7 +77,7 @@ model = PPO.load('mars_lander_model', device='cpu')
 # Record one episode
 env = (make_env_fn(1))()
 obs = env.reset()
-for i in range(max_episode_steps):
+for _ in range(max_episode_steps):
     action, _states = model.predict(obs)
     obs, rewards, done, info = env.step(action)
     env.render()

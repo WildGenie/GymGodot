@@ -29,7 +29,7 @@ class ServerEnv(gym.Env):
         self.parent_conn, self.child_conn = Pipe()
 
         # Start the websocket server process
-        assert ((proc_mode=='thread' or proc_mode=='process'))
+        assert proc_mode in ['thread', 'process']
         print('- starting Gym server')
         if proc_mode == 'thread' :
             self.p = Thread(target=self._start_server)
@@ -44,7 +44,7 @@ class ServerEnv(gym.Env):
         server_port_flag = ' --serverPort={}'.format(serverPort)
         render_path_flag = ' --renderPath={}'.format(renderPath)
         flags = physic_delta_flag + render_loop_flag + server_ip_flag + server_port_flag + render_path_flag
-        print('- starting Godot env with command : ' + exeCmd + flags)
+        print(f'- starting Godot env with command : {exeCmd}{flags}')
         subprocess.Popen([exeCmd + flags], shell=True)
 
     def _start_server(self):
@@ -58,22 +58,20 @@ class ServerEnv(gym.Env):
     async def _server_handler(self, websocket, path):
         while True:
             # Block until there is a msg to send and read it
-            msg = self.child_conn.recv() 
+            msg = self.child_conn.recv()
             # Wait for the msg to be sent
             await websocket.send(json.dumps(msg))
-            # If msg is not a 'close' msg then wait for the answer, otherwise stop the server
-            if msg['cmd'] != 'close' :
-                try:
-                    answer = await websocket.recv()  
-                except:
-                    print('- connection ended')
-                    break
-                # Parse answer
-                answer = json.loads(answer)
-                # Send the answer back to main process
-                self.child_conn.send(answer)
-            else :
+            if msg['cmd'] == 'close':
                 break
+            try:
+                answer = await websocket.recv()  
+            except:
+                print('- connection ended')
+                break
+            # Parse answer
+            answer = json.loads(answer)
+            # Send the answer back to main process
+            self.child_conn.send(answer)
         self.loop.call_soon_threadsafe(self.loop.stop)
 
     def _sendAndGetAnswer(self, msg):

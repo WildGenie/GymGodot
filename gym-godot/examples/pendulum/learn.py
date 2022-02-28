@@ -27,7 +27,7 @@ limit = np.array([1., 1., 2], dtype=np.float32)
 observation_space = spaces.Box(low=-limit, high=limit, dtype=np.float32)
 
 # Create folder to store renders
-renderPath = os.getcwd() + '/render_frames/'
+renderPath = f'{os.getcwd()}/render_frames/'
 if not os.path.exists(renderPath):
     os.makedirs(renderPath)
 else:
@@ -54,7 +54,7 @@ model = DDPG.load('pendulum_model', device='cpu')
 
 # Record one episode
 obs = env.reset()
-for i in range(250):
+for _ in range(250):
     action, _states = model.predict(obs)
     obs, rewards, done, info = env.step(action)
     env.render()
